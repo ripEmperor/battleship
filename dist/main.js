@@ -1,1 +1,1 @@
-(()=>{"use strict"})();
+(()=>{var t={579:t=>{function n(t,n,r){var e;return{start:t,end:n,team:r,hitStatus:[],setLength:void(t[0]==n[0]?e=n[1]-t[1]:(console.log(n[0],t[0]),e=n[0]-t[0])),length:e,hit:function(t,n){this.hitStatus.push([t,n]),console.log(this.hitStatus)},isSunk:function(){return this.hitStatus.length==e}}}t.exports={shipFactory:n,gameboard:function(){return{placeShip:function(t,r,e){return n(t,r,e)}}}}}},n={};!function r(e){var o=n[e];if(void 0!==o)return o.exports;var i=n[e]={exports:{}};return t[e](i,i.exports,r),i.exports}(579)})();
