@@ -39,8 +39,8 @@ function newGameboard(team) {
 
     return {
         team,
-        placeShip: function(row, col) {
-            let newShip = shipFactory(row, col, team);
+        placeShip: function(start, end) {
+            let newShip = shipFactory(start, end, team);
             activeShips.push(newShip);
             return newShip;
         },
@@ -106,8 +106,8 @@ function newGameboard(team) {
 
 const DOM = (function(){
     return {
-        createGrid: function (rows, cols) {
-            const container = document.querySelector(".container");
+        createGrid: function (rows, cols, player) {
+            const container = document.querySelector(player);
             container.style.setProperty('--grid-rows', rows);
             container.style.setProperty('--grid-cols', cols);
             for (let i = 1; i <= rows; i++) {
@@ -119,10 +119,43 @@ const DOM = (function(){
                 }
             }
         },
+
+        displayShip: function (start, end, gameboard) {
+            let coords = [];
+
+            if (start[0] == end[0]) {
+                let onesBetween = getAllNumbersBetween(start[1], end[1]);
+                for (let j of onesBetween) {
+                    coords.push([start[0], j])
+                }
+            } else if (start[1] == end[1]) {
+                let onesBetween = getAllNumbersBetween(start[0], end[0]);
+                for (let j of onesBetween) {
+                    coords.push([j, start[1]])
+                }
+            }
+
+            for (let i of coords) {
+                console.log(i[0], i[1])
+                let tile = document.querySelector(`[data-row="${i[0]}"][data-col="${i[1]}"]`);
+                tile.classList.add('exposed');
+                tile.classList.remove('grid-item')
+            }
+        }
     }
 })();
 
-DOM.createGrid(10, 10);
+const theGame = function() {
+    const selfBoard = newGameboard(1);
+    const enemBoard = newGameboard(2);
+
+    selfBoard.placeShip([1,1], [1,4])
+    DOM.displayShip([1,1],[1,4],selfBoard)
+}
+
+DOM.createGrid(10, 10, '.selfCont');
+DOM.createGrid(10, 10, '.enemCont');
+theGame()
 
 module.exports = {
     shipFactory, newGameboard
