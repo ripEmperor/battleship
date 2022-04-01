@@ -33,7 +33,6 @@ function shipFactory(start, end, team) {
 
 function newGameboard(team) {
     let activeShips = [];
-    let activeTiles = [];
     let missedShots = [];
 
     return {
@@ -44,7 +43,9 @@ function newGameboard(team) {
             return newShip;
         },
 
-        isTileDisabled: function(row, col) {
+        getActiveTiles: function(row, col) {
+            let activeTiles = [];
+
             for (let i of activeShips) {
                 if (i.start[0] == i.end[0]) {
                     let onesBetween = getAllNumbersBetween(i.start[1], i.end[1]);
@@ -54,18 +55,25 @@ function newGameboard(team) {
                 } else if (i.start[1] == i.end[1]) {
                     let onesBetween = getAllNumbersBetween(i.start[0], i.end[0]);
                     for (let j of onesBetween) {
-                        activeTiles.push([i.start[1], j])
+                        activeTiles.push([j, i.start[1]])
                     }
                 }
             }
-            return activeTiles.includes([row, col]) ? false : true;
+            return activeTiles;
+        },
+
+        isTileEmpty: function(row, col) {
+            return (this.getActiveTiles().some(e => Array.isArray(e) && e.every((o, i) => Object.is([row, col][i], o)))) ? false : true;
+        },
+
+        isTileShot: function(row, col) {
+            console.log(missedShots)
+            return (missedShots.some(e => Array.isArray(e) && e.every((o, i) => Object.is([row, col][i], o)))) ? true : false;
         },
 
         receiveAttack: function(row, col) {
-            if (this.isTileDisabled(row, col)) {
-                missedShots.push([row, col])
-                return;
-                //handle wrong click
+            if (this.isTileEmpty(row, col)) {
+                missedShots.push([row, col]);
             } else {
                 for (let i of activeShips) {
                     if (i.start[0] == i.end[0]) {
