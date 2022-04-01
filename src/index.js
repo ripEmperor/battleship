@@ -1,3 +1,5 @@
+import css from './styles/styles.css'
+
 function getAllNumbersBetween(x, y) {
     let numbers = [];
     for (let i = x; i < y; i++) {
@@ -101,6 +103,26 @@ function newGameboard(team) {
         },
     }
 }
+
+const DOM = (function(){
+    return {
+        createGrid: function (rows, cols) {
+            const container = document.querySelector(".container");
+            container.style.setProperty('--grid-rows', rows);
+            container.style.setProperty('--grid-cols', cols);
+            for (let i = 1; i <= rows; i++) {
+                for (let c = 1; c <= rows; c++) {
+                    let cell = document.createElement("button");
+                    cell.setAttribute('data-row', i)
+                    cell.setAttribute('data-col', c)
+                    container.appendChild(cell).className = "grid-item";
+                }
+            }
+        },
+    }
+})();
+
+DOM.createGrid(10, 10);
 
 module.exports = {
     shipFactory, newGameboard
