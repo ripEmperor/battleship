@@ -69,3 +69,13 @@ test('gameboard.isTileShot()', () => {
     gameboard.receiveAttack(1,5);
     expect(gameboard.isTileShot(1,5)).toEqual(true);
 });
+
+test('gameboard.allSunk()', () => {
+    const gameboard = newGameboard(1);
+    const newShip = gameboard.placeShip([1,3], [1,5]);
+    const newShip2 = gameboard.placeShip([2,3], [2,4]);
+    gameboard.receiveAttack(1,3);
+    gameboard.receiveAttack(1,4);
+    gameboard.receiveAttack(2,3);
+    expect(gameboard.allSunk()).toEqual(true);
+});

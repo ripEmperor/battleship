@@ -26,7 +26,7 @@ function shipFactory(start, end, team) {
             this.hitStatus.push([row, col])
         },
         isSunk: function() {
-            return this.hitStatus.length == length ? true : false;
+            return this.hitStatus.length >= this.length ? true : false;
         }
     }
 }
@@ -67,8 +67,19 @@ function newGameboard(team) {
         },
 
         isTileShot: function(row, col) {
-            console.log(missedShots)
             return (missedShots.some(e => Array.isArray(e) && e.every((o, i) => Object.is([row, col][i], o)))) ? true : false;
+        },
+
+        allSunk: function() {
+            let sunkShips = [];
+
+            for (let i of activeShips) {
+                if (i.isSunk() == true) {
+                    sunkShips.push(i)
+                }
+            }
+            
+            return sunkShips.length == activeShips.length ? true : false;
         },
 
         receiveAttack: function(row, col) {
@@ -77,11 +88,11 @@ function newGameboard(team) {
             } else {
                 for (let i of activeShips) {
                     if (i.start[0] == i.end[0]) {
-                        if (col >= i.start[1] && col < i.end[1]) {
+                        if (col >= i.start[1] && col < i.end[1] && row == i.start[0]) {
                             i.hit(row, col)
                         }
                     } else if (i.start[1] == i.end[1]) {
-                        if (row >= i.start[0] && row < i.end[0]) {
+                        if (row >= i.start[0] && row < i.end[0] && col == i.start[1]) {
                             i.hit(row, col)
                         }
                     }
