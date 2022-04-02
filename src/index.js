@@ -283,22 +283,24 @@ const theGame = function() {
             const attackCol = parseInt(e.target.getAttribute('data-col'));
             const attackTeam = e.target.getAttribute('data-team');
 
-            if (attackTeam == 'enem') {
-                if (!(enemBoard.receiveAttack(attackRow, attackCol))) {
-                    let row = randomIntFromInterval(1,10);
-                    let col = randomIntFromInterval(1,10);
-                    while ((selfBoard.isTileShot(row, col)) | (selfBoard.isTileUnavailable(row, col))) {
-                        row = randomIntFromInterval(1,10);
-                        col = randomIntFromInterval(1,10);
-                        console.log(row, col)
+            if (e.target.className != 'missed') {
+                if (attackTeam == 'enem') {
+                    if (!(enemBoard.receiveAttack(attackRow, attackCol))) {
+                        let row = randomIntFromInterval(1,10);
+                        let col = randomIntFromInterval(1,10);
+                        while ((selfBoard.isTileShot(row, col)) | (selfBoard.isTileUnavailable(row, col))) {
+                            row = randomIntFromInterval(1,10);
+                            col = randomIntFromInterval(1,10);
+                            console.log(row, col)
+                        }
+                        selfBoard.receiveAttack(row, col)
                     }
-                    selfBoard.receiveAttack(row, col)
+                    if (enemBoard.allSunk()) {
+                        DOM.displayResult();
+                    }
+                } else {
+                    selfBoard.receiveAttack(attackRow, attackCol);
                 }
-                if (enemBoard.allSunk()) {
-                    DOM.displayResult();
-                }
-            } else {
-                selfBoard.receiveAttack(attackRow, attackCol);
             }
         });
     });
