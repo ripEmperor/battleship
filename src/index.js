@@ -8,6 +8,10 @@ function getAllNumbersBetween(x, y) {
     return numbers;
 }
 
+function randomIntFromInterval(min, max) { // min and max included 
+    return Math.floor(Math.random() * (max - min + 1) + min)
+}
+
 function shipFactory(start, end, team) {
     let length;
 
@@ -26,6 +30,13 @@ function shipFactory(start, end, team) {
         length,
         hit: function(row, col) {
             this.hitStatus.push([row, col])
+            let player = team == 1 ? '.selfCont > ' : '.enemCont > ';
+
+            DOM.displayTile(row, col, player, 0)
+            DOM.displayTile(row+1, col+1, player, 1)
+            DOM.displayTile(row+1, col-1, player, 1)
+            DOM.displayTile(row-1, col+1, player, 1)
+            DOM.displayTile(row-1, col-1, player, 1)
         },
         isSunk: function() {
             return this.hitStatus.length >= this.length ? true : false;
@@ -41,7 +52,15 @@ function newGameboard(team) {
         team,
         placeShip: function(start, end) {
             let newShip = shipFactory(start, end, team);
+
+            let player = team == 1 ? '.selfCont > ' : '.enemCont > ';
+            
             activeShips.push(newShip);
+
+            if (team != 2) {
+                DOM.displayShip(start, end, player)
+            }
+
             return newShip;
         },
 
@@ -84,18 +103,31 @@ function newGameboard(team) {
             return sunkShips.length == activeShips.length ? true : false;
         },
 
+        handleMissed: function() {
+            let player = team == 1 ? '.selfCont > ' : '.enemCont > ';
+
+            for (let i of missedShots) {
+                DOM.displayTile(i[0], i[1], player, 1)
+            }
+        },
+
         receiveAttack: function(row, col) {
             if (this.isTileEmpty(row, col)) {
-                missedShots.push([row, col]);
+                console.log('test')
+                if (!this.isTileShot(row, col)) {
+                    missedShots.push([row, col]);
+                }
+                this.handleMissed()
             } else {
+                console.log('test2');
                 for (let i of activeShips) {
                     if (i.start[0] == i.end[0]) {
                         if (col >= i.start[1] && col < i.end[1] && row == i.start[0]) {
-                            i.hit(row, col)
+                            i.hit(row, col, team)
                         }
                     } else if (i.start[1] == i.end[1]) {
                         if (row >= i.start[0] && row < i.end[0] && col == i.start[1]) {
-                            i.hit(row, col)
+                            i.hit(row, col, team)
                         }
                     }
                 }
@@ -115,12 +147,17 @@ const DOM = (function(){
                     let cell = document.createElement("button");
                     cell.setAttribute('data-row', i)
                     cell.setAttribute('data-col', c)
+                    if (player == '.enemCont') {
+                        cell.setAttribute('data-team', 'enem')
+                    } else {
+                        cell.setAttribute('data-team', 'self')
+                    }
                     container.appendChild(cell).className = "grid-item";
                 }
             }
         },
 
-        displayShip: function (start, end, gameboard) {
+        displayShip: function (start, end, player) {
             let coords = [];
 
             if (start[0] == end[0]) {
@@ -137,11 +174,25 @@ const DOM = (function(){
 
             for (let i of coords) {
                 console.log(i[0], i[1])
-                let tile = document.querySelector(`[data-row="${i[0]}"][data-col="${i[1]}"]`);
+                let tile = document.querySelector(`${player}[data-row="${i[0]}"][data-col="${i[1]}"]`);
                 tile.classList.add('exposed');
-                tile.classList.remove('grid-item')
             }
-        }
+        },
+
+        displayTile: function (row, col, player, missed) {
+            let coords = [];
+            let tile;
+            try{
+                tile = document.querySelector(`${player}[data-row="${row}"][data-col="${col}"]`);
+                if (missed == 1) {
+                    tile.classList.add('missed')
+                } else {
+                    tile.classList.add('exposed');
+                }
+            }catch(e){
+                return;
+            }
+        },
     }
 })();
 
@@ -149,12 +200,37 @@ const theGame = function() {
     const selfBoard = newGameboard(1);
     const enemBoard = newGameboard(2);
 
-    selfBoard.placeShip([1,1], [1,4])
-    DOM.displayShip([1,1],[1,4],selfBoard)
+    enemBoard.placeShip([2,1], [2,4])
+
+    const gridItems = document.querySelectorAll('.grid-item');
+
+    gridItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const attackRow = parseInt(e.target.getAttribute('data-row'));
+            const attackCol = parseInt(e.target.getAttribute('data-col'));
+            const attackTeam = e.target.getAttribute('data-team');
+
+            if (attackTeam == 'enem') {
+                enemBoard.receiveAttack(attackRow, attackCol);
+                selfBoard.receiveAttack(randomIntFromInterval(1,10), randomIntFromInterval(1,10))
+            } else {
+                selfBoard.receiveAttack(attackRow, attackCol);
+            }
+        });
+    });
+
+    //add button eventlistener that takes data-row & data-col as arg \
+    //that onclick looks for coords in enemBoard.activeTiles and \
+    //does enemBoard.hit([cords]) + enemBoard.placeShip([cords]) \
+    //that plus simple loop that passes turns should roughly be it \
+    //and then simply finish up with styling.
 }
+
+
 
 DOM.createGrid(10, 10, '.selfCont');
 DOM.createGrid(10, 10, '.enemCont');
+
 theGame()
 
 module.exports = {
