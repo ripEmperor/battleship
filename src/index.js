@@ -47,9 +47,11 @@ function shipFactory(start, end, team) {
 function newGameboard(team) {
     let activeShips = [];
     let missedShots = [];
+    let unavailableTiles = [];
 
     return {
         team,
+
         placeShip: function(start, end) {
             let newShip = shipFactory(start, end, team);
 
@@ -62,6 +64,17 @@ function newGameboard(team) {
             }
 
             return newShip;
+        },
+
+
+        placeDefault: function() {
+            this.placeShip([2,4], [2,7]);
+            this.placeShip([4,1], [4,5]);
+            this.placeShip([4,7], [7,7]);
+            this.placeShip([3,9], [3,11]);
+            this.placeShip([8,4], [8,6]);
+            this.placeShip([6,1], [6,4]);
+            this.placeShip([10,6], [10,10]);
         },
 
         getActiveTiles: function(row, col) {
@@ -91,6 +104,10 @@ function newGameboard(team) {
             return (missedShots.some(e => Array.isArray(e) && e.every((o, i) => Object.is([row, col][i], o)))) ? true : false;
         },
 
+        isTileUnavailable: function(row, col) {
+            return (unavailableTiles.some(e => Array.isArray(e) && e.every((o, i) => Object.is([row, col][i], o)))) ? true : false;
+        },
+
         allSunk: function() {
             let sunkShips = [];
 
@@ -112,25 +129,37 @@ function newGameboard(team) {
         },
 
         receiveAttack: function(row, col) {
+            unavailableTiles.push([row, col])
             if (this.isTileEmpty(row, col)) {
-                console.log('test')
                 if (!this.isTileShot(row, col)) {
                     missedShots.push([row, col]);
                 }
                 this.handleMissed()
+                return false;
             } else {
-                console.log('test2');
                 for (let i of activeShips) {
                     if (i.start[0] == i.end[0]) {
                         if (col >= i.start[1] && col < i.end[1] && row == i.start[0]) {
                             i.hit(row, col, team)
+                            unavailableTiles.push([row, col])
+                            missedShots.push([row+1, col+1])
+                            missedShots.push([row+1, col-1])
+                            missedShots.push([row-1, col+1])
+                            missedShots.push([row-1, col-1])
                         }
                     } else if (i.start[1] == i.end[1]) {
                         if (row >= i.start[0] && row < i.end[0] && col == i.start[1]) {
                             i.hit(row, col, team)
+                            unavailableTiles.push([row, col])
+                            missedShots.push([row+1, col+1])
+                            missedShots.push([row+1, col-1])
+                            missedShots.push([row-1, col+1])
+                            missedShots.push([row-1, col-1])
+                            console.log(missedShots)
                         }
                     }
                 }
+                return true;
             }
         },
     }
@@ -173,7 +202,6 @@ const DOM = (function(){
             }
 
             for (let i of coords) {
-                console.log(i[0], i[1])
                 let tile = document.querySelector(`${player}[data-row="${i[0]}"][data-col="${i[1]}"]`);
                 tile.classList.add('exposed');
             }
@@ -185,14 +213,58 @@ const DOM = (function(){
             try{
                 tile = document.querySelector(`${player}[data-row="${row}"][data-col="${col}"]`);
                 if (missed == 1) {
-                    tile.classList.add('missed')
+                    tile.classList.add('missed');
+                    tile.classList.remove('grid-item');
+                } else if (player == '.enemCont > ') {
+                    tile.classList.add('selfExposed');
+                    tile.classList.remove('grid-item');
                 } else {
-                    tile.classList.add('exposed');
+                    tile.classList.add('selfExposed');
+                    tile.classList.remove('grid-item');
                 }
             }catch(e){
                 return;
             }
         },
+
+        purgeAll: function() {
+            const enemCont = document.querySelector('.enemCont');
+            const selfCont = document.querySelector('.selfCont');
+
+            while (enemCont.hasChildNodes() | selfCont.hasChildNodes()) {
+                enemCont.removeChild(enemCont.lastChild);
+                selfCont.removeChild(selfCont.lastChild);
+            }
+        },
+
+        displayResult: function(status) {
+            const btns = Array.from(document.querySelectorAll('.grid-item'))
+            const result = document.querySelector('.result');
+
+            btns.forEach(function(btn) { 
+                btn.disabled = true;
+            })
+
+            if (status == 1) {
+                result.innerHTML = 'You won! Congratz';
+            } else {
+                result.innerHTML = 'You lost! So bad!'
+            }
+
+            const restartCont = document.querySelector('.restartCont')
+            const restart = document.createElement('button');
+            restart.classList.add('restart');
+            restart.innerHTML = 'Restart';
+            restartCont.appendChild(restart);
+
+            restart.addEventListener('click', () => {
+                DOM.purgeAll();
+                DOM.createGrid(10, 10, '.selfCont');
+                DOM.createGrid(10, 10, '.enemCont');
+                result.innerHTML = ''
+                theGame()
+            });
+        }
     }
 })();
 
@@ -200,7 +272,8 @@ const theGame = function() {
     const selfBoard = newGameboard(1);
     const enemBoard = newGameboard(2);
 
-    enemBoard.placeShip([2,1], [2,4])
+    enemBoard.placeDefault();
+    selfBoard.placeDefault();
 
     const gridItems = document.querySelectorAll('.grid-item');
 
@@ -211,8 +284,19 @@ const theGame = function() {
             const attackTeam = e.target.getAttribute('data-team');
 
             if (attackTeam == 'enem') {
-                enemBoard.receiveAttack(attackRow, attackCol);
-                selfBoard.receiveAttack(randomIntFromInterval(1,10), randomIntFromInterval(1,10))
+                if (!(enemBoard.receiveAttack(attackRow, attackCol))) {
+                    let row = randomIntFromInterval(1,10);
+                    let col = randomIntFromInterval(1,10);
+                    while ((selfBoard.isTileShot(row, col)) | (selfBoard.isTileUnavailable(row, col))) {
+                        row = randomIntFromInterval(1,10);
+                        col = randomIntFromInterval(1,10);
+                        console.log(row, col)
+                    }
+                    selfBoard.receiveAttack(row, col)
+                }
+                if (enemBoard.allSunk()) {
+                    DOM.displayResult();
+                }
             } else {
                 selfBoard.receiveAttack(attackRow, attackCol);
             }

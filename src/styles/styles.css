@@ -1,5 +1,20 @@
 * {
     box-sizing: border-box;
+    border-radius: 0px;
+}
+
+.app-wrapper {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.result {
+    font-size: large;
+    font-family: 'Arial';
 }
 
 body {
@@ -14,15 +29,13 @@ body {
 
 .container {
     display: flex;
-    border: solid 5px red;
     justify-content: center;
     align-items: center;
     gap: 50px;
-    height: 100%;
 }
   
 .selfCont, .enemCont {
-    border: solid 5px blue;
+    border: solid 2px rgb(165, 165, 165);
     width: 500px;
     height: 500px;
     display: grid;
@@ -31,15 +44,37 @@ body {
 }
 
 .grid-item {
-    border: 1px solid rgb(255, 0, 0);
+    border: 1px solid rgb(209, 209, 209);
+    text-align: center;
+}
+
+.grid-item:hover {
+    border: 2px solid rgb(167, 137, 221);
     text-align: center;
 }
 
 .exposed {
-    border: 1px solid rgb(51, 255, 0);
+    border: 2px solid rgb(174, 157, 252);
+    background-color: rgb(209, 198, 255);
 }
 
 .missed {
-    background-color: azure;
-    border: 1px solid rgb(255, 0, 221);
+    background-color: rgb(220, 217, 235);
+    border: 1px solid rgb(156, 151, 177);
+}
+
+.missed::after {
+    content: " \B7 ";
+    font-size: large;
+}
+
+.selfExposed {
+    border: 2px solid rgb(118, 93, 226);
+    background-image: linear-gradient(to bottom, rgb(132, 104, 255), rgb(166, 146, 255));
+}
+
+.restart {
+    border: 1px solid greenyellow;
+    width: 60px;
+    height: 30px;
 }
